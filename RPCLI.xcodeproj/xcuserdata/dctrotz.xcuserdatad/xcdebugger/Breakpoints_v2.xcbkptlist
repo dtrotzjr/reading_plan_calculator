@@ -8,14 +8,15 @@
          <BreakpointContent
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
+            condition = "totalVersesToday == 0"
             continueAfterRunningActions = "No"
             filePath = "RPCLI/CSVPlanBuilder.cpp"
-            timestampString = "554795684.5714639"
+            timestampString = "554825460.560047"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "80"
-            endingLineNumber = "80"
-            landmarkName = "CSVPlanBuilder::_buildSection(ofstream&amp; ofile, int day, int&amp; curBook, int&amp; curChapter, long totalVersesPerDay, long&amp; totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs)"
+            startingLineNumber = "78"
+            endingLineNumber = "78"
+            landmarkName = "CSVPlanBuilder::_buildSection(ofstream&amp; ofile, int day, int totalDays, int&amp; curBook, int&amp; curChapter, long totalVersesPerDay, long&amp; totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

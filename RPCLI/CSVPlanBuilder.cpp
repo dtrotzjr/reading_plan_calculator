@@ -73,16 +73,8 @@ long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int&
     }
     if(prevChapter > 0) {
         ofile << prevChapter << " ";
-    } /*else if (newBook && curBook > upperBookBound) {
-        // We check whether this is a newBook or not because
-        // at the end of a section we need to account for the
-        // last chapter
-        int chapter = bible.getChapters(curBook - 1);
-        long thisAssignment = bible.getVerses(curBook - 1, chapter);
-        totalVersesToday += thisAssignment;
-        totalVersesAssignedInSection += thisAssignment;
-        ofile << chapter << " ";
-    }*/
+    }
+    
     ofile << "," << totalVersesToday << ",";
     return totalVersesToday;
 }
