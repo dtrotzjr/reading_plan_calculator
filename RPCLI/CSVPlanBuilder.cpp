@@ -49,14 +49,14 @@ CSVPlanBuilder::CSVPlanBuilder() {
     cout << "Old Testament without Psalms and Proverbs has " << _totalVersesInOTModified << " verses at: " << _ratioOTModified * 100.0f << "%%" << endl;
 }
 
-long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int& curBook, int& curChapter, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs) {
+long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int& curBook, int& curChapter, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs) {
     long totalVersesToday = 0;
     bool newBook = false;
     int prevChapter = 0;
     
     ofile << bible.getName(curBook) << " " << curChapter << "-";
     
-    while (!_dayIsComplete(day, totalVersesPerDay, totalVersesAssignedInSection, ratioToAssign, curBook, upperBookBound)) {
+    while (!_dayIsComplete(day, totalDays, totalVersesPerDay, totalVersesAssignedInSection, ratioToAssign, curBook, upperBookBound)) {
         if (newBook) {
             ofile << bible.getName(curBook) << " " << curChapter << "-";
             newBook = false;
@@ -73,7 +73,7 @@ long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int& curBook, int& 
     }
     if(prevChapter > 0) {
         ofile << prevChapter << " ";
-    } else if (newBook && curBook > upperBookBound) {
+    } /*else if (newBook && curBook > upperBookBound) {
         // We check whether this is a newBook or not because
         // at the end of a section we need to account for the
         // last chapter
@@ -82,7 +82,7 @@ long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int& curBook, int& 
         totalVersesToday += thisAssignment;
         totalVersesAssignedInSection += thisAssignment;
         ofile << chapter << " ";
-    }
+    }*/
     ofile << "," << totalVersesToday << ",";
     return totalVersesToday;
 }
@@ -113,18 +113,18 @@ void CSVPlanBuilder::Build(int totalDays) {
             ofile << day << ",";
 
             // OT
-            totalVersesAssignedToday += _buildSection(ofile, day, curOTBook, curOTChapter, totalVersesPerDay, totalVersesAssignedInOT, _ratioOTModified, MALACHI, true);
+            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curOTBook, curOTChapter, totalVersesPerDay, totalVersesAssignedInOT, _ratioOTModified, MALACHI, true);
             
             // Psalms
-            totalVersesAssignedToday += _buildSection(ofile, day, curPsalmBook, curPsalmChapter, totalVersesPerDay, totalVersesAssignedInPsalms, _ratioPsalms, PSALMS, false);
+            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curPsalmBook, curPsalmChapter, totalVersesPerDay, totalVersesAssignedInPsalms, _ratioPsalms, PSALMS, false);
             
             // Proverbs
-            long proVerses = bible.getVerses(PROVERBS, day);
+            long proVerses = bible.getVerses(PROVERBS, day - 1);
             totalVersesAssignedToday += proVerses;
             ofile << "Proverbs " << day << "," << proVerses << ",";
             
             // NT
-            totalVersesAssignedToday += _buildSection(ofile, day, curNTBook, curNTChapter, totalVersesPerDay, totalVersesAssignedInNT, _ratioNewTestament, REVELATION, false);
+            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curNTBook, curNTChapter, totalVersesPerDay, totalVersesAssignedInNT, _ratioNewTestament, REVELATION, false);
             
             ofile << totalVersesAssignedToday << endl;
         }
@@ -147,8 +147,13 @@ bool CSVPlanBuilder::_nextChapter(int& curBook, int& curChapter, bool skipPsalms
     return bookIncremented;
 }
 
-bool CSVPlanBuilder::_dayIsComplete(int day, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound) {
+bool CSVPlanBuilder::_dayIsComplete(int day, int totalDays, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound) {
+    bool complete = false;
     double currentRatio =  ((double)totalVersesAssignedInSection / (double)(day * totalVersesPerDay));
-    bool complete = (currentRatio > ratio) || curBook > upperBookBound;
+    if(day < totalDays) {
+        complete = (currentRatio > ratio) || curBook > upperBookBound;
+    } else {
+        complete = curBook > upperBookBound;
+    }
     return complete;
 }

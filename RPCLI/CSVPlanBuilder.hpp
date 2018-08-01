@@ -20,8 +20,8 @@ public:
     void Build(int totalDays);
 protected:
     bool _nextChapter(int& curBook, int& curChapter, bool skipPsalmsAndProverbs);
-    bool _dayIsComplete(int day, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound);
-    long _buildSection(std::ofstream& ofile, int day, int& curBook, int& curChapters, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs);
+    bool _dayIsComplete(int day, int totalDays, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound);
+    long _buildSection(std::ofstream& ofile, int day, int totalDays, int& curBook, int& curChapters, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs);
     
     KJVBible bible;
     

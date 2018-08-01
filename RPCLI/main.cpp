@@ -10,6 +10,6 @@
 
 int main(int argc, const char * argv[]) {
     CSVPlanBuilder builder;
-    builder.Build(28);
+    builder.Build(31);
     return 0;
 }
