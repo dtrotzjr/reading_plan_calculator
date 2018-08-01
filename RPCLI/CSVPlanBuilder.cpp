@@ -111,10 +111,7 @@ void CSVPlanBuilder::Build(int totalDays) {
         for(int day = 1; day <= totalDays; day++) {
             totalVersesAssignedToday = 0;
             ofile << day << ",";
-
-            // OT
-            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curOTBook, curOTChapter, totalVersesPerDay, totalVersesAssignedInOT, _ratioOTModified, MALACHI, true);
-            
+            int adjustment = 0;
             // Psalms
             totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curPsalmBook, curPsalmChapter, totalVersesPerDay, totalVersesAssignedInPsalms, _ratioPsalms, PSALMS, false);
             
@@ -122,6 +119,11 @@ void CSVPlanBuilder::Build(int totalDays) {
             long proVerses = bible.getVerses(PROVERBS, day - 1);
             totalVersesAssignedToday += proVerses;
             ofile << "Proverbs " << day << "," << proVerses << ",";
+            
+            // OT
+            adjustment += totalVersesAssignedToday - (totalVersesPerDay * (_ratioPsalms + _ratioProverbs));
+            double adjustedOTRatio = ((totalVersesPerDay * _ratioOTModified) - adjustment) / totalVersesPerDay;
+            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curOTBook, curOTChapter, totalVersesPerDay, totalVersesAssignedInOT, adjustedOTRatio, MALACHI, true);
             
             // NT
             totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curNTBook, curNTChapter, totalVersesPerDay, totalVersesAssignedInNT, _ratioNewTestament, REVELATION, false);
