@@ -21,8 +21,8 @@ public:
 protected:
     bool _nextChapter(int& curBook, int& curChapter, bool skipPsalmsAndProverbs);
     bool _dayIsComplete(int day, int totalDays, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound);
-    long _buildSection(std::ofstream& ofile, int day, int totalDays, int& curBook, int& curChapters, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs);
-    
+    long _buildSection(std::ofstream& ofile, int day, int totalDays, int& curBook, int& curChapters, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs, int adjustment = 0);
+    bool _dayWasOverflow(long totalVersesPerDay, long totalVersesAssigned);
     KJVBible bible;
     
     long _totalVersesInBible;

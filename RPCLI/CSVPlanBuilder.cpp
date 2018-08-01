@@ -49,21 +49,24 @@ CSVPlanBuilder::CSVPlanBuilder() {
     cout << "Old Testament without Psalms and Proverbs has " << _totalVersesInOTModified << " verses at: " << _ratioOTModified * 100.0f << "%%" << endl;
 }
 
-long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int& curBook, int& curChapter, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs) {
+long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int& curBook, int& curChapter, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs, int adjustment) {
     long totalVersesToday = 0;
     bool newBook = false;
     int prevChapter = 0;
+    int prevBook = 0;
     
     ofile << bible.getName(curBook) << " " << curChapter << "-";
     
-    while (!_dayIsComplete(day, totalDays, totalVersesPerDay, totalVersesAssignedInSection, ratioToAssign, curBook, upperBookBound)) {
+    while (!_dayIsComplete(day, totalDays, totalVersesPerDay, totalVersesAssignedInSection + adjustment, ratioToAssign, curBook, upperBookBound)) {
         if (newBook) {
             ofile << bible.getName(curBook) << " " << curChapter << "-";
             newBook = false;
         }
         long thisAssignment = bible.getVerses(curBook, curChapter - 1);
+        
         totalVersesToday += thisAssignment;
         totalVersesAssignedInSection += thisAssignment;
+        prevBook = curBook;
         prevChapter = curChapter;
         newBook = _nextChapter(curBook, curChapter, skipPsalmsAndProverbs);
         if(newBook) {
@@ -72,6 +75,14 @@ long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int&
         }
     }
     if(prevChapter > 0) {
+        if(day < totalDays && totalVersesToday > bible.getVerses(prevBook, prevChapter - 1) && _dayWasOverflow(totalVersesPerDay * ratioToAssign, totalVersesToday)) {
+            curChapter = prevChapter;
+            prevChapter -= 1;
+            
+            long overflowedVerses = bible.getVerses(curBook, curChapter - 1);
+            totalVersesToday -= overflowedVerses;
+            totalVersesAssignedInSection -= overflowedVerses;
+        }
         ofile << prevChapter << " ";
     }
     
@@ -98,7 +109,7 @@ void CSVPlanBuilder::Build(int totalDays) {
     int curNTBook = MATTHEW;
     int curNTChapter = 1;
     
-    ofile.open ("/Users/dctrotz/tmp/plan.csv");
+    ofile.open ("/Users/davidtrotz/tmp/plan.csv");
     if(ofile.is_open()) {
         for(int day = 1; day <= totalDays; day++) {
             totalVersesAssignedToday = 0;
@@ -113,9 +124,8 @@ void CSVPlanBuilder::Build(int totalDays) {
             ofile << "Proverbs " << day << "," << proVerses << ",";
             
             // OT
-            adjustment += totalVersesAssignedToday - (totalVersesPerDay * (_ratioPsalms + _ratioProverbs));
-            double adjustedOTRatio = ((totalVersesPerDay * _ratioOTModified) - adjustment) / totalVersesPerDay;
-            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curOTBook, curOTChapter, totalVersesPerDay, totalVersesAssignedInOT, adjustedOTRatio, MALACHI, true);
+            adjustment = totalVersesAssignedToday - (totalVersesPerDay * (_ratioPsalms + _ratioProverbs));
+            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curOTBook, curOTChapter, totalVersesPerDay, totalVersesAssignedInOT, _ratioOTModified, MALACHI, true, adjustment);
             
             // NT
             totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curNTBook, curNTChapter, totalVersesPerDay, totalVersesAssignedInNT, _ratioNewTestament, REVELATION, false);
@@ -149,5 +159,10 @@ bool CSVPlanBuilder::_dayIsComplete(int day, int totalDays, long totalVersesPerD
     } else {
         complete = curBook > upperBookBound;
     }
+
     return complete;
+}
+
+bool CSVPlanBuilder::_dayWasOverflow(long totalVersesPerDay, long totalVersesAssigned) {
+    return (totalVersesAssigned / totalVersesPerDay) > 1.25;
 }
