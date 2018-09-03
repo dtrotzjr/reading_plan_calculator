@@ -17,7 +17,7 @@
 class CSVPlanBuilder {
 public:
     CSVPlanBuilder();
-    void Build(int totalDays);
+    void Build(int totalDays, const char* outputFile);
 protected:
     bool _nextChapter(int& curBook, int& curChapter, bool skipPsalmsAndProverbs);
     bool _dayIsComplete(int day, int totalDays, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound);
@@ -30,6 +30,8 @@ protected:
     double _ratioPsalms;
     long _totalVersesInProverbs;
     double _ratioProverbs;
+    long _totalVersesInPsalmsAndProverbs;
+    double _ratioPsalmsAndProverbs;
     long _totalVersesInNewTestament;
     double _ratioNewTestament;
     long _totalVersesInOldTestament;

@@ -29,6 +29,10 @@ CSVPlanBuilder::CSVPlanBuilder() {
     _ratioProverbs = (double)_totalVersesInProverbs / (double)_totalVersesInBible;
     cout << "Proverbs has " << _totalVersesInProverbs << " verses at: " << _ratioProverbs * 100.0f << "%%" << endl;
     
+    _totalVersesInPsalmsAndProverbs = _totalVersesInPsalms + _totalVersesInProverbs;
+    _ratioPsalmsAndProverbs = (double)_totalVersesInPsalmsAndProverbs / (double)_totalVersesInBible;
+    cout << "Psalms and Proverbs has " << _totalVersesInPsalmsAndProverbs << " verses at: " << _ratioPsalmsAndProverbs * 100.0f << "%%" << endl;
+    
     _totalVersesInNewTestament = 0;
     for( int book = MATTHEW; book <= REVELATION; book++ ) {
         _totalVersesInNewTestament += bible.getVerses(book);
@@ -55,11 +59,11 @@ long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int&
     int prevChapter = 0;
     int prevBook = 0;
     
-    ofile << bible.getName(curBook) << " " << curChapter << "-";
+    ofile << bible.getName(curBook) << "_" << curChapter << "-";
     
     while (!_dayIsComplete(day, totalDays, totalVersesPerDay, totalVersesAssignedInSection + adjustment, ratioToAssign, curBook, upperBookBound)) {
         if (newBook) {
-            ofile << bible.getName(curBook) << " " << curChapter << "-";
+            ofile << "#" << bible.getName(curBook) << "_" << curChapter << "-";
             newBook = false;
         }
         long thisAssignment = bible.getVerses(curBook, curChapter - 1);
@@ -70,7 +74,7 @@ long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int&
         prevChapter = curChapter;
         newBook = _nextChapter(curBook, curChapter, skipPsalmsAndProverbs);
         if(newBook) {
-            ofile << prevChapter << " ";
+            ofile << prevChapter;
             prevChapter = 0;
         }
     }
@@ -83,19 +87,18 @@ long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int&
             totalVersesToday -= overflowedVerses;
             totalVersesAssignedInSection -= overflowedVerses;
         }
-        ofile << prevChapter << " ";
+        ofile << prevChapter;
     }
     
     ofile << "," << totalVersesToday << ",";
     return totalVersesToday;
 }
 
-void CSVPlanBuilder::Build(int totalDays) {
+void CSVPlanBuilder::Build(int totalDays, const char* outputFile) {
     long totalVersesPerDay = _totalVersesInBible / totalDays;
     cout << "Total Verses Per Day: " << totalVersesPerDay << " verses at: " << ((double)totalVersesPerDay/(double)_totalVersesInBible) * 100.0f << "%%" << endl;
     
     ofstream ofile;
-    long totalVersesAssignedOverall = 0;
     long totalVersesAssignedToday = 0;
     long totalVersesAssignedInOT = 0;
     int curOTBook = GENESIS;
@@ -109,19 +112,14 @@ void CSVPlanBuilder::Build(int totalDays) {
     int curNTBook = MATTHEW;
     int curNTChapter = 1;
     
-    ofile.open ("/Users/davidtrotz/tmp/plan.csv");
+    ofile.open(outputFile);
     if(ofile.is_open()) {
         for(int day = 1; day <= totalDays; day++) {
             totalVersesAssignedToday = 0;
             ofile << day << ",";
             int adjustment = 0;
-            // Psalms
-            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curPsalmBook, curPsalmChapter, totalVersesPerDay, totalVersesAssignedInPsalms, _ratioPsalms, PSALMS, false);
-            
-            // Proverbs
-            long proVerses = bible.getVerses(PROVERBS, day - 1);
-            totalVersesAssignedToday += proVerses;
-            ofile << "Proverbs " << day << "," << proVerses << ",";
+            // Psalms & Proverbs
+            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curPsalmBook, curPsalmChapter, totalVersesPerDay, totalVersesAssignedInPsalms, _ratioPsalmsAndProverbs, PROVERBS, false);
             
             // OT
             adjustment = totalVersesAssignedToday - (totalVersesPerDay * (_ratioPsalms + _ratioProverbs));
