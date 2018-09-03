@@ -7,9 +7,13 @@
 //
 
 #include "CSVPlanBuilder.hpp"
+#include "CSVPlanToXMLPlanWriter.hpp"
 
 int main(int argc, const char * argv[]) {
     CSVPlanBuilder builder;
-    builder.Build(31);
+    builder.Build(90, "/Users/dctrotz/tmp/plan_90_.csv");
+    
+//    CSVPlanToXMLPlanWriter csvToXML;
+//    csvToXML.Convert("/Users/dctrotz/tmp/plan_90_clean.csv", "/Users/dctrotz/tmp/plan_90_clean.xml");
     return 0;
 }

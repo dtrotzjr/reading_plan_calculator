@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		076AB2D8213CD01E006C0791 /* CSVPlanToXMLPlanWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 076AB2D6213CD01E006C0791 /* CSVPlanToXMLPlanWriter.cpp */; };
 		07C83A5121114B6E00C1ABC1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07C83A5021114B6E00C1ABC1 /* main.cpp */; };
 		07C83A5E21114B9500C1ABC1 /* KJVChapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07C83A5921114B9500C1ABC1 /* KJVChapter.cpp */; };
 		07C83A5F21114B9500C1ABC1 /* KJVBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07C83A5A21114B9500C1ABC1 /* KJVBook.cpp */; };
@@ -32,6 +33,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		076AB2D6213CD01E006C0791 /* CSVPlanToXMLPlanWriter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CSVPlanToXMLPlanWriter.cpp; sourceTree = "<group>"; };
+		076AB2D7213CD01E006C0791 /* CSVPlanToXMLPlanWriter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = CSVPlanToXMLPlanWriter.hpp; sourceTree = "<group>"; };
 		07C83A4D21114B6E00C1ABC1 /* RPCLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RPCLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		07C83A5021114B6E00C1ABC1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		07C83A5721114B9500C1ABC1 /* KJVResource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KJVResource.h; sourceTree = "<group>"; };
@@ -107,6 +110,8 @@
 				07C83A5021114B6E00C1ABC1 /* main.cpp */,
 				07C83A74211160A700C1ABC1 /* CSVPlanBuilder.cpp */,
 				07C83A75211160A700C1ABC1 /* CSVPlanBuilder.hpp */,
+				076AB2D6213CD01E006C0791 /* CSVPlanToXMLPlanWriter.cpp */,
+				076AB2D7213CD01E006C0791 /* CSVPlanToXMLPlanWriter.hpp */,
 			);
 			path = RPCLI;
 			sourceTree = "<group>";
@@ -172,6 +177,7 @@
 				07C83A6E21114BBA00C1ABC1 /* RPDate.cpp in Sources */,
 				07C83A6D21114BBA00C1ABC1 /* SELStack.cpp in Sources */,
 				07C83A5F21114B9500C1ABC1 /* KJVBook.cpp in Sources */,
+				076AB2D8213CD01E006C0791 /* CSVPlanToXMLPlanWriter.cpp in Sources */,
 				07C83A6021114B9500C1ABC1 /* KJVBible.cpp in Sources */,
 				07C83A5E21114B9500C1ABC1 /* KJVChapter.cpp in Sources */,
 				07C83A6F21114BBA00C1ABC1 /* RPUtils.cpp in Sources */,
