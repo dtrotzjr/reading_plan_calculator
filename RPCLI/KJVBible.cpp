@@ -29,6 +29,7 @@
  *                                                                           *
  ****************************************************************************/
 #include "KJVBible.h"
+#include "RPUtils.h"
 
 KJVBible::KJVBible()
 {
@@ -44,7 +45,7 @@ int KJVBible::getChapters(string strName) const
     // does not extend the == operator to const objects. I want
     // to keep constancy and this is the safest way.
     
-    for(int count = 0;count < 66 ;count++)
+    for(int count = RPBooks::GENESIS;count <= RPBooks::REVELATION ;count++)
     {
         strCurr = getName(count);
         if(strCurr == strName)
@@ -55,7 +56,7 @@ int KJVBible::getChapters(string strName) const
 
 int KJVBible::getChapters(int nBookNum) const
 {
-    if(nBookNum >= 0 && nBookNum < 66)
+    if(nBookNum >= RPBooks::GENESIS && nBookNum <= RPBooks::REVELATION)
         return m_Books[nBookNum].getChapters();
     else
         return -1;
@@ -68,7 +69,7 @@ long KJVBible::getVerses(string strName) const
     // does not extend the == operator to const objects. I want
     // to keep constancy and this is the safest way.
     
-    for(int bookNum = 0; bookNum < 66; bookNum++)
+    for(int bookNum = RPBooks::GENESIS; bookNum <= RPBooks::REVELATION; bookNum++)
     {
         strCurr = getName(bookNum);
         if(strCurr == strName)
@@ -82,7 +83,7 @@ long KJVBible::getVerses(string strName) const
 
 string KJVBible::getName(int book) const
 {
-    if(book >= 0 && book < 66)
+    if(book >= RPBooks::GENESIS && book <= RPBooks::REVELATION)
         return m_Books[book].getName();
     
     return m_Books[0].getName();
@@ -90,42 +91,37 @@ string KJVBible::getName(int book) const
 
 long KJVBible::getVerses(string strName,int nChapter) const
 {
-    int count;
-    string strCurr;     // This is redundant I know but MobileStudio for Palm OS
-    // does not extend the == operator to const objects. I want
-    // to keep constancy and this is the safest way.
+    int book = getBookNumber(strName);
     
-    for(count = 0; count < 66; count++)
-        strCurr = getName(count);
-    if(strCurr == strName)
-        return m_Books[count].getVerses(nChapter);
+    if(book >= RPBooks::GENESIS && book <= RPBooks::REVELATION)
+        return m_Books[book].getVerses(nChapter);
     return -1;
 }
 
 long KJVBible::getVerses(int nBookNum,int nChapter) const
 {
-    if(nBookNum >= 0 && nBookNum < 66)
+    if(nBookNum >= RPBooks::GENESIS && nBookNum <= RPBooks::REVELATION)
         return m_Books[nBookNum].getVerses(nChapter);
     return -1;
 }
 
 long KJVBible::getVerses(int nBookNum) const
 {
-    if(nBookNum >= 0 && nBookNum < 66)
+    if(nBookNum >= RPBooks::GENESIS && nBookNum <= RPBooks::REVELATION)
         return m_Books[nBookNum].getVerses();
     return -1;
 }
 
 void KJVBible::selectRange(int nLow, int nHigh, bool bnSelect)
 {
-    if(nLow < nHigh && nLow >= 0 && nHigh < 66)
+    if(nLow < nHigh && nLow >= RPBooks::GENESIS && nHigh <= RPBooks::REVELATION)
         for(int count = nLow; count <= nHigh; count++)
             m_Books[count].select(bnSelect);
 }
 
 bool KJVBible::select(int nBookNum, bool bnSelect)
 {
-    if(nBookNum >= 0 && nBookNum < 66){
+    if(nBookNum >= RPBooks::GENESIS && nBookNum <= RPBooks::REVELATION){
         m_Books[nBookNum].select(bnSelect);
         return true;
     }
@@ -134,7 +130,7 @@ bool KJVBible::select(int nBookNum, bool bnSelect)
 
 bool KJVBible::isSelected(int nBookNum) const
 {
-    if(nBookNum >= 0 && nBookNum <= 65){
+    if(nBookNum >= RPBooks::GENESIS && nBookNum <= RPBooks::REVELATION){
         return m_Books[nBookNum].isSelected();
     }
     return false;
@@ -142,7 +138,7 @@ bool KJVBible::isSelected(int nBookNum) const
 
 bool KJVBible::isSelected(int nLow, int nHigh) const
 {
-    if(nLow < nHigh && nLow >= 0 && nHigh <= 65)
+    if(nLow < nHigh && nLow >= RPBooks::GENESIS && nHigh <= RPBooks::REVELATION)
     {
         for(int count = nLow; count <= nHigh; count++)
         {
@@ -153,4 +149,19 @@ bool KJVBible::isSelected(int nLow, int nHigh) const
     return true;
 }
 
+
+int KJVBible::getBookNumber(string bookName) const
+{
+    int book = -1;
+    string strCurr;
+    for(int index = RPBooks::GENESIS; index <= RPBooks::REVELATION; index++) {
+        strCurr = getName(index);
+        if(strCurr == bookName) {
+            book = index;
+            break;
+        }
+    }
+    
+    return book;
+}
 

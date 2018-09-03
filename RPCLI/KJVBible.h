@@ -147,6 +147,8 @@ public:
 		that it is to be assigned for reading.
 	*/
 	bool isSelected(int nLow, int nHigh)  const;
+    
+    int getBookNumber(string bookName) const;
 private:
 	/*!	An array of books in the KJVBible scheme */
 	KJVBook m_Books[66];
