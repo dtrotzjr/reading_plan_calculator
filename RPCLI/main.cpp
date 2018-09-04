@@ -10,10 +10,10 @@
 #include "CSVPlanToXMLPlanWriter.hpp"
 
 int main(int argc, const char * argv[]) {
-    CSVPlanBuilder builder;
-    builder.Build(90, "/Users/dctrotz/tmp/plan_90_.csv");
+//    CSVPlanBuilder builder(20, 20);
+//    builder.Build(90, "/Users/dctrotz/tmp/plan_90_.csv");
     
-//    CSVPlanToXMLPlanWriter csvToXML;
-//    csvToXML.Convert("/Users/dctrotz/tmp/plan_90_clean.csv", "/Users/dctrotz/tmp/plan_90_clean.xml");
+    CSVPlanToXMLPlanWriter csvToXML;
+    csvToXML.Convert("/Users/dctrotz/tmp/plan_90_rev_d.csv", "/Users/dctrotz/tmp/plan_90_rev_d.xml");
     return 0;
 }

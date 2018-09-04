@@ -16,13 +16,14 @@
 
 class CSVPlanBuilder {
 public:
-    CSVPlanBuilder();
+    CSVPlanBuilder(long overalOverageMargin,
+                   long dayOverageMargin);
     void Build(int totalDays, const char* outputFile);
 protected:
     bool _nextChapter(int& curBook, int& curChapter, bool skipPsalmsAndProverbs);
-    bool _dayIsComplete(int day, int totalDays, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound);
-    long _buildSection(std::ofstream& ofile, int day, int totalDays, int& curBook, int& curChapters, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs, int adjustment = 0);
-    bool _dayWasOverflow(long totalVersesPerDay, long totalVersesAssigned);
+    bool _dayIsComplete(int day, int totalDays, long totalVersesPerDay, long totalVersesAssignedInSectionToday, long totalVersesAssignedInSectionOverall, double targetRatio, int curBook, int upperBookBound, bool forceAtLeastOneAssignmentInSection);
+    long _buildSectionForDay(std::ofstream& ofile, int day, int totalDays, int& curBook, int& curChapters, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs, bool forceAtLeastOneAssignmentInSection = false, int adjustment = 0);
+    bool _dayOverflowed(int day, long totalVersesPerDayLimit, long totalVersesAssignedOverall, long totalVersesAssignedForDay);
     KJVBible bible;
     
     long _totalVersesInBible;
@@ -38,6 +39,8 @@ protected:
     double _ratioOldTestament;
     long _totalVersesInOTModified;
     double _ratioOTModified;
+    long _overalOverageMargin;
+    long _dayOverageMargin;
     
     int _curOTBook;
     int _curOTBookChapter;

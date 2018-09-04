@@ -14,7 +14,10 @@ using namespace std;
 
 #include "RPUtils.h"
 
-CSVPlanBuilder::CSVPlanBuilder() {
+CSVPlanBuilder::CSVPlanBuilder(long overalOverageMargin,
+                               long dayOverageMargin):
+    _overalOverageMargin(overalOverageMargin),
+    _dayOverageMargin(dayOverageMargin) {
     _totalVersesInBible = 0;
     for( int book = GENESIS; book <= REVELATION; book++ ) {
         _totalVersesInBible += bible.getVerses(book);
@@ -53,50 +56,10 @@ CSVPlanBuilder::CSVPlanBuilder() {
     cout << "Old Testament without Psalms and Proverbs has " << _totalVersesInOTModified << " verses at: " << _ratioOTModified * 100.0f << "%%" << endl;
 }
 
-long CSVPlanBuilder::_buildSection(ofstream& ofile, int day, int totalDays, int& curBook, int& curChapter, long totalVersesPerDay, long& totalVersesAssignedInSection, double ratioToAssign, int upperBookBound, bool skipPsalmsAndProverbs, int adjustment) {
-    long totalVersesToday = 0;
-    bool newBook = false;
-    int prevChapter = 0;
-    int prevBook = 0;
-    
-    ofile << bible.getName(curBook) << "_" << curChapter << "-";
-    
-    while (!_dayIsComplete(day, totalDays, totalVersesPerDay, totalVersesAssignedInSection + adjustment, ratioToAssign, curBook, upperBookBound)) {
-        if (newBook) {
-            ofile << "#" << bible.getName(curBook) << "_" << curChapter << "-";
-            newBook = false;
-        }
-        long thisAssignment = bible.getVerses(curBook, curChapter - 1);
-        
-        totalVersesToday += thisAssignment;
-        totalVersesAssignedInSection += thisAssignment;
-        prevBook = curBook;
-        prevChapter = curChapter;
-        newBook = _nextChapter(curBook, curChapter, skipPsalmsAndProverbs);
-        if(newBook) {
-            ofile << prevChapter;
-            prevChapter = 0;
-        }
-    }
-    if(prevChapter > 0) {
-        if(day < totalDays && totalVersesToday > bible.getVerses(prevBook, prevChapter - 1) && _dayWasOverflow(totalVersesPerDay * ratioToAssign, totalVersesToday)) {
-            curChapter = prevChapter;
-            prevChapter -= 1;
-            
-            long overflowedVerses = bible.getVerses(curBook, curChapter - 1);
-            totalVersesToday -= overflowedVerses;
-            totalVersesAssignedInSection -= overflowedVerses;
-        }
-        ofile << prevChapter;
-    }
-    
-    ofile << "," << totalVersesToday << ",";
-    return totalVersesToday;
-}
-
-void CSVPlanBuilder::Build(int totalDays, const char* outputFile) {
-    long totalVersesPerDay = _totalVersesInBible / totalDays;
-    cout << "Total Verses Per Day: " << totalVersesPerDay << " verses at: " << ((double)totalVersesPerDay/(double)_totalVersesInBible) * 100.0f << "%%" << endl;
+void CSVPlanBuilder::Build(int totalDays,
+                           const char* outputFile) {
+    long totalVersesPerDayLimit = _totalVersesInBible / totalDays;
+    cout << "Total Verses Per Day: " << totalVersesPerDayLimit << " verses at: " << ((double)totalVersesPerDayLimit/(double)_totalVersesInBible) * 100.0f << "%%" << endl;
     
     ofstream ofile;
     long totalVersesAssignedToday = 0;
@@ -119,14 +82,16 @@ void CSVPlanBuilder::Build(int totalDays, const char* outputFile) {
             ofile << day << ",";
             int adjustment = 0;
             // Psalms & Proverbs
-            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curPsalmBook, curPsalmChapter, totalVersesPerDay, totalVersesAssignedInPsalms, _ratioPsalmsAndProverbs, PROVERBS, false);
+            totalVersesAssignedToday += _buildSectionForDay(ofile, day, totalDays, curPsalmBook, curPsalmChapter, totalVersesPerDayLimit, totalVersesAssignedInPsalms, _ratioPsalmsAndProverbs, PROVERBS, false, true);
             
             // OT
-            adjustment = totalVersesAssignedToday - (totalVersesPerDay * (_ratioPsalms + _ratioProverbs));
-            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curOTBook, curOTChapter, totalVersesPerDay, totalVersesAssignedInOT, _ratioOTModified, MALACHI, true, adjustment);
+            adjustment = totalVersesAssignedToday - (totalVersesPerDayLimit * (_ratioPsalms + _ratioProverbs));
+            if(adjustment < 0)
+                adjustment = 0; // We don't want other sections playing catchup on behalf of others, we only want sections taking into account that a previous section was over its daily quote.
+            totalVersesAssignedToday += _buildSectionForDay(ofile, day, totalDays, curOTBook, curOTChapter, totalVersesPerDayLimit, totalVersesAssignedInOT, _ratioOTModified, MALACHI, true, false, adjustment);
             
             // NT
-            totalVersesAssignedToday += _buildSection(ofile, day, totalDays, curNTBook, curNTChapter, totalVersesPerDay, totalVersesAssignedInNT, _ratioNewTestament, REVELATION, false);
+            totalVersesAssignedToday += _buildSectionForDay(ofile, day, totalDays, curNTBook, curNTChapter, totalVersesPerDayLimit, totalVersesAssignedInNT, _ratioNewTestament, REVELATION, false);
             
             ofile << totalVersesAssignedToday << endl;
         }
@@ -134,7 +99,62 @@ void CSVPlanBuilder::Build(int totalDays, const char* outputFile) {
     }
 }
 
-bool CSVPlanBuilder::_nextChapter(int& curBook, int& curChapter, bool skipPsalmsAndProverbs) {
+long CSVPlanBuilder::_buildSectionForDay(ofstream& ofile,
+                                         int day,
+                                         int totalDays,
+                                         int& curBook,
+                                         int& curChapter,
+                                         long totalVersesPerDayLimit,
+                                         long& totalVersesAssignedInSection,
+                                         double ratioToAssign,
+                                         int upperBookBound,
+                                         bool skipPsalmsAndProverbs,
+                                         bool forceAtLeastOneAssignmentInSection,
+                                         int adjustment) {
+    long totalVersesAssignedInSectionToday = 0;
+    bool newBook = false;
+    int prevChapter = 0;
+    int prevBook = 0;
+    
+    ofile << bible.getName(curBook) << "_" << curChapter << "-";
+    
+    while (!_dayIsComplete(day, totalDays, totalVersesPerDayLimit, totalVersesAssignedInSectionToday  + adjustment, totalVersesAssignedInSection, ratioToAssign, curBook, upperBookBound, forceAtLeastOneAssignmentInSection)) {
+        if (newBook) {
+            ofile << "#" << bible.getName(curBook) << "_" << curChapter << "-";
+        }
+        long thisAssignment = bible.getVerses(curBook, curChapter - 1);
+        
+        totalVersesAssignedInSectionToday += thisAssignment;
+        totalVersesAssignedInSection += thisAssignment;
+        prevBook = curBook;
+        prevChapter = curChapter;
+        newBook = _nextChapter(curBook, curChapter, skipPsalmsAndProverbs);
+        if(newBook) {
+            ofile << prevChapter;
+            prevChapter = 0;
+        }
+    }
+    if(prevChapter > 0) {
+        if(day < totalDays &&
+           totalVersesAssignedInSectionToday > bible.getVerses(prevBook, prevChapter - 1) &&
+           _dayOverflowed(day, totalVersesPerDayLimit, totalVersesAssignedInSection, totalVersesAssignedInSectionToday)) {
+            curChapter = prevChapter;
+            prevChapter -= 1;
+            
+            long overflowedVerses = bible.getVerses(curBook, curChapter - 1);
+            totalVersesAssignedInSectionToday -= overflowedVerses;
+            totalVersesAssignedInSection -= overflowedVerses;
+        }
+        ofile << prevChapter;
+    }
+    
+    ofile << "," << totalVersesAssignedInSectionToday << ",";
+    return totalVersesAssignedInSectionToday;
+}
+
+bool CSVPlanBuilder::_nextChapter(int& curBook,
+                                  int& curChapter,
+                                  bool skipPsalmsAndProverbs) {
     bool bookIncremented = false;
     curChapter++;
     if(curChapter > bible.getChapters(curBook)) {
@@ -149,18 +169,38 @@ bool CSVPlanBuilder::_nextChapter(int& curBook, int& curChapter, bool skipPsalms
     return bookIncremented;
 }
 
-bool CSVPlanBuilder::_dayIsComplete(int day, int totalDays, long totalVersesPerDay, long totalVersesAssignedInSection, double ratio, int curBook, int upperBookBound) {
+bool CSVPlanBuilder::_dayIsComplete(int day,
+                                    int totalDays,
+                                    long totalVersesPerDayLimit,
+                                    long totalVersesAssignedInSectionToday,
+                                    long totalVersesAssignedInSectionOverall,
+                                    double targetRatio,
+                                    int curBook,
+                                    int upperBookBound,
+                                    bool forceAtLeastOneAssignmentInSection) {
     bool complete = false;
-    double currentRatio =  ((double)totalVersesAssignedInSection / (double)(day * totalVersesPerDay));
+    
     if(day < totalDays) {
-        complete = (currentRatio > ratio) || curBook > upperBookBound;
+        double currentEffectiveRatio =  ((double)totalVersesAssignedInSectionOverall / (double)(day * totalVersesPerDayLimit));
+        bool sectionCompleteToday = totalVersesAssignedInSectionToday > (totalVersesPerDayLimit * targetRatio);
+        bool sectionCompleteOverall = curBook > upperBookBound;
+        bool sectionQuotaMet = currentEffectiveRatio > targetRatio;
+        complete = sectionQuotaMet || sectionCompleteOverall || sectionCompleteToday;
     } else {
         complete = curBook > upperBookBound;
     }
-
+    // One last chance to override the completion status
+    if(complete && forceAtLeastOneAssignmentInSection && totalVersesAssignedInSectionToday == 0.0)
+        complete = false;
+    
     return complete;
 }
 
-bool CSVPlanBuilder::_dayWasOverflow(long totalVersesPerDay, long totalVersesAssigned) {
-    return (totalVersesAssigned / totalVersesPerDay) > 1.25;
+bool CSVPlanBuilder::_dayOverflowed(int day,
+                                    long totalVersesPerDayLimit,
+                                    long totalVersesAssignedOverall,
+                                    long totalVersesAssignedForDay) {
+    bool overflowedOverall = totalVersesAssignedOverall > ((totalVersesPerDayLimit * day) + _overalOverageMargin);
+    bool overflowedDay = totalVersesAssignedForDay > (totalVersesPerDayLimit + _dayOverageMargin);
+    return overflowedOverall || overflowedDay;
 }
